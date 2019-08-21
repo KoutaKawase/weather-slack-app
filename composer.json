@@ -1,5 +1,9 @@
 {
     "require": {
-        "cmfcmf/openweathermap-php-api": "^3.0"
+        "cmfcmf/openweathermap-php-api": "^3.0",
+        "nyholm/psr7": "^1.1",
+        "php-http/guzzle6-adapter": "^2.0",
+        "php-curl-class/php-curl-class": "^8.6",
+        "yosymfony/toml": "^1.0"
     }
 }

@@ -5,6 +5,9 @@ use \Nyholm\Psr7\Factory\Psr17Factory;
 use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
 use Yosymfony\Toml\Toml;
 use \Curl\Curl;
+use League\Csv\Reader;
+use League\Csv\Statement;
+
 
 //必要なファイル読み込み
 require "./vendor/autoload.php";
@@ -28,6 +31,30 @@ function getWeather(object $owm, string $location, string $unit, string $lang): 
     }
 }
 
+function getPhrase(): string {
+    //名言格納用
+    $phrases = [];
+    //おまじない
+    if (!ini_get("auto_detect_line_endings")) {
+        ini_set("auto_detect_line_endings", '1');
+    }
+    //CSV読み込み
+    $csv = Reader::createFromPath('./phrases.csv', 'r');
+    //オフセットを設定
+    $csv->setHeaderOffset(0);
+    //レコードをすべて取得
+    $records = $csv->getRecords(["phrase", "name"]);
+    //レコードを回し配列に名言メッセを格納していく
+    foreach($records as $record) {
+        array_push($phrases, $record['phrase'] . " By " . $record['name']);
+    }
+    //ランダムにキーを取得
+    $rand_key = array_rand($phrases);
+    //ランダムに名言メッセを取得
+    $phrase = $phrases[$rand_key];
+    return $phrase;
+}
+
 function createWeatherMessage(object $weather, string $location): string {
     //数字と曜日を対応させるための曜日配列
     $week = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
@@ -38,7 +65,16 @@ function createWeatherMessage(object $weather, string $location): string {
     $nowWeek = $week[$weekNumber];
     //現在時刻取得
     $now = date("現在は Y年m月d日 {$nowWeek} G時i分s秒 です。");
-    $weatherMessage = $now . "{$location}の気温は" . $weather->temperature . "です。";
+    //名言をランダムに取得
+    $phrase = getPhrase();
+    //メッセージ作成
+    $weatherMessage = <<< EOM
+    {$now} {$location}の気温は{$weather->temperature->now}です。
+    天候は{$weather->weather}です。
+    湿度は{$weather->humidity}。
+    風速は{$weather->wind->speed}です。
+    今回の名言: 【{$phrase}】
+    EOM;
     return $weatherMessage;
 }
 
